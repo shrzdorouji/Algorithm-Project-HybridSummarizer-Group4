@@ -77,7 +77,7 @@ score = score + ( w[j][i] / Σ w[j][*] ) × TR[j]
 end for
 TR_new[i] = (1 − d)/n + d × score
 end for
-
+```text
 9. Compute convergence:
 
    diff = max |TR_new[i] − TR[i]|
