@@ -69,7 +69,7 @@ optimized graph-based ranking algorithm.
 
 #### Step 5: Iterative Ranking (Weighted PageRank)
 8. Repeat until convergence or Tmax iterations:
-```text   
+```   
 for i = 1 to n do
 score = 0
 for each j in Neighbors(i) do
@@ -77,18 +77,18 @@ score = score + ( w[j][i] / Σ w[j][*] ) × TR[j]
 end for
 TR_new[i] = (1 − d)/n + d × score
 end for
-```text
+```
 9. Compute convergence:
 
    diff = max |TR_new[i] − TR[i]|
 
 10. Update scores:
 
-   TR ← TR_new
+    TR ← TR_new
 
 11. Stop if:
 
-   diff < ε
+    diff < ε
 
 ---
 
