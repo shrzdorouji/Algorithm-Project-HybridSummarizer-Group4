@@ -1,6 +1,15 @@
-   __pycache__/
-   *.pkl
-   *.jsonl
-   *.cache
-   data/raw/
-   .env
+# Python
+__pycache__/
+*.pkl
+*.jsonl
+*.cache
+
+# Environment & IDE
+.env
+.idea/
+
+# Ignore data contents but keep folder structure
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
