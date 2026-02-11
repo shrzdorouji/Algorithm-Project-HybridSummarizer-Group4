@@ -1,70 +1,56 @@
 """
 LLM-Based Abstractive Summarization Module
 ------------------------------------------
-This module defines the role of a Large Language Model (LLM)
-as an independent abstractive summarizer.
-
-The design strictly follows:
-- llm_rule.md
-
-IMPORTANT:
-- The LLM operates independently from TextRank.
-- It receives only raw textual content.
-- No sentence scores, rankings, or graph information are provided.
-- This is a Phase-1 skeleton (design-level, non-executable).
+Model: Pegasus (Distilled) - Fully Offline Version
 """
 
 from typing import Optional
+import re
+import os
 
 
 class LLMAbstractiveSummarizer:
-    """
-    Independent LLM-based abstractive summarizer.
-    """
-
     def __init__(
-        self,
-        max_length: int = 150,
-        prompt_template: Optional[str] = None,
+            self,
+            # آدرس پوشه‌ای که فایل‌های مدل در آن قرار دارند
+            model_path: str = "./my_pegasus",
+            max_length: int = 150,
+            prompt_template: Optional[str] = None,
     ):
-        """
-        Initialize LLM summarization parameters.
-
-        Parameters
-        ----------
-        max_length : int
-            Maximum length of the generated summary.
-        prompt_template : Optional[str]
-            Fixed prompt used to guide abstractive summarization.
-        """
         self.max_length = max_length
-        self.prompt_template = prompt_template or (
-            "Summarize the following document in a concise and coherent manner:"
-        )
+        self.prompt_template = prompt_template or "{document}"
 
-    # ------------------------------------------------------------------
-    # Step 1: Preprocessing
-    # ------------------------------------------------------------------
+        try:
+            # وارد کردن مستقیم کلاس‌های مخصوص پگاسوس برای پایداری بیشتر
+            from transformers import pipeline, PegasusTokenizer, PegasusForConditionalGeneration
+
+            print(f"🔄 Loading Pegasus from local directory: {model_path}")
+
+            # بارگذاری توکنایزر و مدل مستقیماً از پوشه ساخته شده توسط شما
+            tokenizer = PegasusTokenizer.from_pretrained(model_path)
+            model = PegasusForConditionalGeneration.from_pretrained(model_path)
+
+            # ایجاد خط لوله خلاصه‌سازی با استفاده از منابع محلی
+            self.summarizer = pipeline(
+                "summarization",
+                model=model,
+                tokenizer=tokenizer,
+                device=-1  # استفاده از CPU برای اطمینان از عدم تداخل با کارت گرافیک
+            )
+            print("✅ Pegasus Engine is fully loaded and ready!")
+
+        except Exception as e:
+            print(f"❌ Error loading local model: {e}")
+            print("💡 Tip: Ensure all 5 files (including pytorch_model.bin) are in 'my_pegasus' folder.")
+
     def preprocess(self, document: str) -> str:
-        """
-        Preprocess the input document.
-        This may include cleaning, normalization, or tokenization.
+        if not document or not document.strip():
+            return ""
+        # پاکسازی فواصل اضافی برای درک بهتر مدل
+        text = document.strip()
+        text = re.sub(r'\s+', ' ', text)
+        return text
 
-        Parameters
-        ----------
-        document : str
-            Original document D.
-
-        Returns
-        -------
-        str
-            Preprocessed textual content.
-        """
-        pass
-
-    # ------------------------------------------------------------------
-    # Step 2: Prompt Construction
-    # ------------------------------------------------------------------
     def build_prompt(self, document: str) -> str:
         """
         Construct the final LLM input by combining
