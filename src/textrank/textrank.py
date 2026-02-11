@@ -242,24 +242,36 @@ class TextRankSummarizer:
     # ------------------------------------------------------------------
     # Step 4 & 5: Initialization and Iterative Ranking (PageRank)
     # ------------------------------------------------------------------
-    def rank_sentences(
-        self, graph: Dict[int, Dict[int, float]]
-    ) -> List[float]:
-        """
-        Apply weighted PageRank to compute TextRank scores.
+    def rank_sentences(self, graph: Dict[int, Dict[int, float]]) -> List[float]:
+        import numpy as np
+        n = len(graph)
+        if n == 0: return []
 
-        Parameters
-        ----------
-        graph : Dict[int, Dict[int, float]]
-            Sentence similarity graph.
+        # مقداردهی اولیه با نایمپای (سریع و تمیز)
+        TR = np.array([1.0 / n] * n)
 
-        Returns
-        -------
-        List[float]
-            Final TextRank scores TR[i] for each sentence.
-        """
-        pass
+        # پیش‌محاسبه مجموع وزن‌ها
+        sum_of_weights = np.array([sum(graph[i].values()) for i in range(n)])
 
+        for _ in range(self.Tmax):
+            TR_new = np.zeros(n)
+
+            for i in range(n):
+                score_sum = 0.0
+                # بهینه‌سازی: فقط روی همسایه‌های واقعی جمله i می‌چرخیم (نه کل n جمله)
+                for j, weight_ji in graph[i].items():
+                    if sum_of_weights[j] > 0:
+                        score_sum += (weight_ji / sum_of_weights[j]) * TR[j]
+
+                TR_new[i] = (1.0 - self.d) / n + self.d * score_sum
+
+            # بررسی همگرایی با قدرت نایمپای
+            if np.max(np.abs(TR_new - TR)) < self.epsilon:
+                TR = TR_new
+                break
+            TR = TR_new
+
+        return TR.tolist()
     # ------------------------------------------------------------------
     # Step 6 & 7: Sentence Selection and Output
     # ------------------------------------------------------------------
