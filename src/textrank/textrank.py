@@ -12,8 +12,27 @@ NOTE:
 This is an initial skeleton for Phase-1.
 Actual implementations will be completed in later phases.
 """
-
+import re
 from typing import List, Dict
+
+import nltk
+from nltk import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.snowball import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+def sentence_segmentation(document: str) -> List[str]:
+    """
+    Split the document into raw sentences using NLTK's recommended tokenizer.
+    """
+    try:
+        # استفاده از sent_tokenize که هوشمندتر از regex ساده عمل می‌کند
+        return sent_tokenize(document)
+    except LookupError:
+        # در صورتی که دیتای punkt دانلود نشده باشد
+        nltk.download('punkt')
+        return sent_tokenize(document)
 
 
 class TextRankSummarizer:
@@ -22,12 +41,12 @@ class TextRankSummarizer:
     """
 
     def __init__(
-        self,
-        damping_factor: float = 0.85,
-        similarity_threshold: float = 0.1,
-        max_iterations: int = 100,
-        convergence_threshold: float = 1e-4,
-        knn: int = 10,
+            self,
+            damping_factor: float = 0.85,
+            similarity_threshold: float = 0.1,
+            max_iterations: int = 100,
+            convergence_threshold: float = 1e-4,
+            knn: int = 10,
     ):
         """
         Initialize TextRank hyperparameters.
@@ -55,22 +74,72 @@ class TextRankSummarizer:
     # Step 1: Preprocessing
     # ------------------------------------------------------------------
     def preprocess(self, document: str) -> List[str]:
+        # 1. Sentence splitting (simple regex-based)
+        sentences = re.split(r"[.!?]\s+", document.strip())
+
+        # Basic stop-word list (can be expanded later)
+        stop_words = {
+            "the", "is", "a", "an", "and", "or", "to", "of", "in", "on",
+            "for", "with", "as", "by", "at", "from", "that", "this", "it"
+        }
+
+        processed_sentences = []
+
+        for sentence in sentences:
+            # 2. Lowercase
+            sentence = sentence.lower()
+
+            # 3. Remove non-alphabetic characters
+            sentence = re.sub(r"[^a-z\s]", "", sentence)
+
+            # 4. Tokenization
+            tokens = sentence.split()
+
+            # 5. Stop-word removal
+            tokens = [t for t in tokens if t not in stop_words]
+
+            if tokens:
+                processed_sentences.append(" ".join(tokens))
+
+        return processed_sentences
+
+    # ------------------------------------------------------------------
+    # Step 1: Advanced_Preprocessing
+    # -----------------------------------------------------------------
+
+    def advanced_preprocess(self, raw_sentences: List[str]) -> List[str]:
         """
-        Split document into sentences and apply basic preprocessing:
-        tokenization, stop-word removal, and optional lemmatization.
-
-        Parameters
-        ----------
-        document : str
-            Input document D.
-
-        Returns
-        -------
-        List[str]
-            List of preprocessed sentences S = {s1, s2, ..., sn}.
+        Advanced preprocessing for Phase 2.
+        Input is now a List of raw sentences to ensure 1-to-1 alignment.
         """
-        pass
+        # ۱. بارگذاری منابع (فقط یک‌بار)
+        try:
+            stop_words = set(stopwords.words("english"))
+        except LookupError:
+            nltk.download("punkt")
+            nltk.download("stopwords")
+            stop_words = set(stopwords.words("english"))
 
+        stemmer = PorterStemmer()
+        processed_sentences: List[str] = []
+
+        # ۲. پردازش روی تک‌تک جملاتی که از قبل جدا شده‌اند
+        for sent in raw_sentences:
+            # توکن‌بندی کلمات
+            tokens = word_tokenize(sent.lower())
+
+            # حذف استاپ‌وردها، ریشه‌یابی و فیلتر کردن کلمات غیرالفبایی
+            filtered_tokens = [
+                stemmer.stem(t)
+                for t in tokens
+                if t.isalpha() and t not in stop_words
+            ]
+
+            # بازسازی جمله پردازش‌شده
+            # نکته مهم: حتی اگر جمله خالی شد، یک رشته خالی اضافه می‌کنیم تا هم‌ترازی لیست به‌هم نخورد
+            processed_sentences.append(" ".join(filtered_tokens))
+
+        return processed_sentences
     # ------------------------------------------------------------------
     # Step 2: Sentence Representation (TF-IDF)
     # ------------------------------------------------------------------
