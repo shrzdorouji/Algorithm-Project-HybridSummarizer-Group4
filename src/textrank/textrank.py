@@ -186,24 +186,58 @@ class TextRankSummarizer:
     # Step 3: Sparse Similarity Graph Construction
     # ------------------------------------------------------------------
     def build_similarity_graph(
-        self, vectors: List[Dict[str, float]]
+            self, vectors: List[Dict[str, float]]
     ) -> Dict[int, Dict[int, float]]:
         """
         Build a sparse weighted similarity graph using cosine similarity
-        and KNN candidate selection.
-
-        Parameters
-        ----------
-        vectors : List[Dict[str, float]]
-            Sparse TF-IDF sentence vectors.
-
-        Returns
-        -------
-        Dict[int, Dict[int, float]]
-            Adjacency list representation of graph G(V, E),
-            where G[i][j] = similarity weight w_ij.
+        and KNN candidate selection using a Min-Heap.
         """
-        pass
+        import heapq
+        n = len(vectors)
+
+        if n <= 1:
+            return {i: {} for i in range(n)}
+
+        # Syncing with your __init__ parameters
+        theta = self.theta
+        k = self.knn
+
+        graph: Dict[int, Dict[int, float]] = {i: {} for i in range(n)}
+
+        # Optimized cosine similarity for sparse dicts
+        def cosine_sparse(v1: Dict[str, float], v2: Dict[str, float]) -> float:
+            if not v1 or not v2:
+                return 0.0
+            # Iterate over the smaller vector for efficiency
+            if len(v1) > len(v2):
+                v1, v2 = v2, v1
+            return sum(v1[t] * v2[t] for t in v1 if t in v2)
+
+        # Build graph using Step 5 & 6 of pseudocode
+        for i in range(n):
+            heap = []  # min-heap to keep track of top-k neighbors
+
+            for j in range(n):
+                if i == j:
+                    continue
+
+                sim = cosine_sparse(vectors[i], vectors[j])
+
+                if sim < theta:
+                    continue
+
+                # KNN Optimization using Heap: O(N log K)
+                if len(heap) < k:
+                    heapq.heappush(heap, (sim, j))
+                else:
+                    heapq.heappushpop(heap, (sim, j))
+
+            # Add edges to the sparse adjacency list
+            for sim, j in heap:
+                graph[i][j] = sim
+                graph[j][i] = sim
+
+        return graph
 
     # ------------------------------------------------------------------
     # Step 4 & 5: Initialization and Iterative Ranking (PageRank)
