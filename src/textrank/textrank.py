@@ -140,6 +140,7 @@ class TextRankSummarizer:
             processed_sentences.append(" ".join(filtered_tokens))
 
         return processed_sentences
+
     # ------------------------------------------------------------------
     # Step 2: Sentence Representation (TF-IDF)
     # ------------------------------------------------------------------
