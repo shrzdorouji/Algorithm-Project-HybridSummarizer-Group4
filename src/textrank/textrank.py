@@ -275,39 +275,73 @@ class TextRankSummarizer:
     # ------------------------------------------------------------------
     # Step 6 & 7: Sentence Selection and Output
     # ------------------------------------------------------------------
-    def summarize(self, document: str, top_k: int) -> List[str]:
+    def summarize(self, document: str, top_k: int) -> str:
         """
         Generate an extractive summary using the Optimized TextRank algorithm.
-
-        Parameters
-        ----------
-        document : str
-            Input document D.
-        top_k : int
-            Number of sentences to select.
-
-        Returns
-        -------
-        List[str]
-            Extractive summary of k sentences (original order preserved).
+        Returns a single string summary, ensuring 1-to-1 alignment between
+        raw and processed sentences.
         """
-        # Step 1: Preprocessing
-        sentences = self.preprocess(document)
 
-        # Step 2: Sentence representation
-        vectors = self.sentence_representation(sentences)
+        # --------------------------------------------------
+        # Step 1: Sentence Segmentation (RAW sentences)
+        # --------------------------------------------------
+        # این جملات برای خروجی نهایی هستند (دست‌نخورده با علائم نگارشی)
+        raw_sentences = sentence_segmentation(document)
 
-        # Step 3: Graph construction
+        if not raw_sentences:
+            return ""
+
+        # اگر تعداد جملات کمتر از k بود، کل متن را برگردان
+        if len(raw_sentences) <= top_k:
+            return " ".join(raw_sentences)
+
+        # --------------------------------------------------
+        # Step 1.5: Advanced Preprocessing
+        # --------------------------------------------------
+        # ارسال لیست جملات خام به تابع پیش‌پردازش برای حفظ دقیق "تعداد" (Alignment)
+        cleaned_sentences = self.advanced_preprocess(raw_sentences)
+
+        # مکانیزم ایمنی برای اطمینان از عدم تغییر تعداد جملات در پردازش
+        if len(cleaned_sentences) != len(raw_sentences):
+            raise ValueError(
+                f"Mismatch: Raw({len(raw_sentences)}) != Cleaned({len(cleaned_sentences)}). "
+                "The preprocessing logic must not drop or merge sentences."
+            )
+
+        # --------------------------------------------------
+        # Step 2: Sentence Representation (TF-IDF Vectors)
+        # --------------------------------------------------
+        vectors = self.sentence_representation(cleaned_sentences)
+
+        # --------------------------------------------------
+        # Step 3: Sparse Similarity Graph (KNN + Cosine)
+        # --------------------------------------------------
         graph = self.build_similarity_graph(vectors)
 
-        # Step 4 & 5: Ranking
+        # --------------------------------------------------
+        # Step 4 & 5: Iterative Ranking (PageRank)
+        # --------------------------------------------------
         scores = self.rank_sentences(graph)
 
-        # Step 6: Sentence selection
-        # TODO:
-        # 1. Pair scores with original sentence indices
-        # 2. Sort indices by scores descending
-        # 3. Take top_k indices
-        # 4. Re-sort these top_k indices to preserve original document order
-        # 5. Return selected sentences
-        pass
+        # --------------------------------------------------
+        # Step 6: Sentence Selection and Sorting
+        # --------------------------------------------------
+        # ۱. اتصال اندیس به امتیاز
+        indexed_scores = list(enumerate(scores))
+
+        # ۲. سورت نزولی بر اساس امتیاز برای پیدا کردن جملات مهم‌تر
+        indexed_scores.sort(key=lambda x: x[1], reverse=True)
+
+        # ۳. انتخاب k اندیس برتر
+        top_indices = [idx for idx, _ in indexed_scores[:top_k]]
+
+        # ۴. سورت مجدد اندیس‌ها به صورت صعودی برای حفظ ترتیب وقوع در متن اصلی
+        top_indices.sort()
+
+        # ۵. استخراج جملات خام بر اساس اندیس‌های نهایی
+        selected_sentences = [raw_sentences[i] for i in top_indices]
+
+        # --------------------------------------------------
+        # Step 7: Output (Join as a single string)
+        # --------------------------------------------------
+        return " ".join(selected_sentences)
