@@ -144,7 +144,7 @@ class TextRankSummarizer:
     # Step 2: Sentence Representation (TF-IDF)
     # ------------------------------------------------------------------
     def sentence_representation(
-        self, sentences: List[str]
+            self, sentences: List[str]
     ) -> List[Dict[str, float]]:
         """
         Convert sentences into sparse TF-IDF vectors.
@@ -159,8 +159,29 @@ class TextRankSummarizer:
         List[Dict[str, float]]
             Sparse TF-IDF vectors for each sentence.
         """
-        pass
+        if not sentences:
+            return []
 
+        # Initialize TF-IDF Vectorizer (standard, sparse, normalized)
+        vectorizer = TfidfVectorizer()
+
+        # Fit and transform sentences into a sparse TF-IDF matrix
+        tfidf_matrix = vectorizer.fit_transform(sentences)
+
+        # Get vocabulary terms aligned with matrix columns
+        feature_names = vectorizer.get_feature_names_out()
+
+        vectors = []
+        # Convert each sparse row into a dictionary (non-zero entries only)
+        for i in range(tfidf_matrix.shape[0]):
+            row = tfidf_matrix.getrow(i)
+            vector = {
+                feature_names[idx]: float(value)
+                for idx, value in zip(row.indices, row.data)
+            }
+            vectors.append(vector)
+
+        return vectors
     # ------------------------------------------------------------------
     # Step 3: Sparse Similarity Graph Construction
     # ------------------------------------------------------------------
