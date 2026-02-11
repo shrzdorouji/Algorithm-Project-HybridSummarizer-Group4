@@ -52,69 +52,38 @@ class LLMAbstractiveSummarizer:
         return text
 
     def build_prompt(self, document: str) -> str:
-        """
-        Construct the final LLM input by combining
-        the fixed prompt and the document text.
+        if not document:
+            return ""
+        return self.prompt_template.format(document=document)
 
-        Parameters
-        ----------
-        document : str
-            Preprocessed document.
-
-        Returns
-        -------
-        str
-            Final input prompt for the LLM.
-        """
-        pass
-
-    # ------------------------------------------------------------------
-    # Step 3: LLM Generation
-    # ------------------------------------------------------------------
     def generate_summary(self, prompt: str) -> str:
-        """
-        Generate an abstractive summary using an external LLM.
+        if not prompt:
+            return ""
 
-        NOTE:
-        - The LLM is treated as a black-box oracle.
-        - No internal states, scores, or explanations are exposed.
+        try:
+            # تنظیمات بهینه پگاسوس برای تولید خلاصه کاملاً بازنویسی شده (Abstractive)
+            outputs = self.summarizer(
+                prompt,
+                max_length=60,
+                min_length=20,
+                num_beams=4,  # جستجوی عمیق کلمات برای جمله‌بندی انسانی
+                no_repeat_ngram_size=3,  # جلوگیری از تکرار عین عبارات متن اصلی
+                repetition_penalty=1.5,  # جریمه برای جلوگیری از کپی‌برداری کلمه به کلمه
+                length_penalty=0.8,  # تعادل بین کوتاهی و کامل بودن متن
+                early_stopping=True,
+                truncation=True
+            )
 
-        Parameters
-        ----------
-        prompt : str
-            Input prompt for the LLM.
+            res = outputs[0]['summary_text'].strip()
+            # Pegasus گاهی تگ <n> برای خط جدید تولید می‌کند که آن را با فاصله جایگزین می‌کنیم
+            return res.replace("<n>", " ").strip()
 
-        Returns
-        -------
-        str
-            Abstractive summary S_llm.
-        """
-        pass
+        except Exception as e:
+            print(f"⚠️ LLM Generation Error: {e}")
+            # بازگشت به حالت امن: نمایش بخشی از متن اصلی در صورت بروز خطا
+            return " ".join(prompt.split()[:25]) + "..."
 
-    # ------------------------------------------------------------------
-    # Main Interface
-    # ------------------------------------------------------------------
     def summarize(self, document: str) -> str:
-        """
-        Generate a standalone abstractive summary from the original document.
-
-        Algorithm:
-        1. Preprocess document D
-        2. Construct prompt I = P + D
-        3. Generate summary S_llm = LLM.generate(I)
-        4. Return S_llm
-
-        Parameters
-        ----------
-        document : str
-            Original input document.
-
-        Returns
-        -------
-        str
-            Abstractive LLM-generated summary.
-        """
         processed_doc = self.preprocess(document)
-        prompt = self.build_prompt(processed_doc)
-        summary = self.generate_summary(prompt)
-        return summary
+        input_text = self.build_prompt(processed_doc)
+        return self.generate_summary(input_text)
