@@ -15,14 +15,7 @@ def run_final_test():
     # یک متن تست چالش‌برانگیز (درباره تغییرات اقلیمی)
     # این متن جملات بلندی دارد تا ببینیم مدل چطور آن‌ها را کوتاه و بازنویسی می‌کند
     document = """
-    Climate change is one of the most pressing challenges facing the global community in the 21st century. 
-    The rising levels of carbon dioxide in the atmosphere, primarily caused by industrial activities and 
-    the burning of fossil fuels, have led to an increase in global temperatures. This phenomenon, 
-    often referred to as global warming, results in the melting of polar ice caps and a significant 
-    rise in sea levels, which threatens coastal cities around the world. Environmental scientists 
-    urgently advocate for a transition to renewable energy sources, such as solar and wind power, 
-    to mitigate the long-term effects of this environmental crisis and ensure a sustainable future 
-    for coming generations.
+The development of mRNA vaccines has marked a new era in modern medicine, offering a faster and more flexible approach to preventing infectious diseases. Unlike traditional vaccines, which use weakened or inactivated viruses, mRNA technology teaches cells how to make a protein that triggers an immune response. Researchers are now exploring the potential of this technology to treat other conditions, including cancer and rare genetic disorders, potentially saving millions of lives in the coming decades.
     """
 
     print("\n" + "=" * 60)

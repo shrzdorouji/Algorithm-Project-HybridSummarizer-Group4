@@ -1,20 +1,10 @@
-"""
-LLM-Based Abstractive Summarization Module
-------------------------------------------
-Model: Pegasus (Distilled) - Fully Offline Version
-"""
-
 from typing import Optional
 import re
 import os
 
-from nltk.translate.lepor import length_penalty
-
-
 class LLMAbstractiveSummarizer:
     def __init__(
             self,
-            # آدرس پوشه‌ای که فایل‌های مدل در آن قرار دارند
             model_path: str = "./my_pegasus",
             max_length: int = 150,
             prompt_template: Optional[str] = None,
@@ -23,32 +13,26 @@ class LLMAbstractiveSummarizer:
         self.prompt_template = prompt_template or "{document}"
 
         try:
-            # وارد کردن مستقیم کلاس‌های مخصوص پگاسوس برای پایداری بیشتر
             from transformers import pipeline, PegasusTokenizer, PegasusForConditionalGeneration
 
             print(f"🔄 Loading Pegasus from local directory: {model_path}")
-
-            # بارگذاری توکنایزر و مدل مستقیماً از پوشه ساخته شده توسط شما
             tokenizer = PegasusTokenizer.from_pretrained(model_path)
             model = PegasusForConditionalGeneration.from_pretrained(model_path)
 
-            # ایجاد خط لوله خلاصه‌سازی با استفاده از منابع محلی
             self.summarizer = pipeline(
                 "summarization",
                 model=model,
                 tokenizer=tokenizer,
-                device=-1  # استفاده از CPU برای اطمینان از عدم تداخل با کارت گرافیک
+                device=-1  # CPU
             )
-            print("✅ Pegasus Engine is fully loaded and ready!")
+            print("✅ Pegasus Engine is ready with advanced sampling!")
 
         except Exception as e:
             print(f"❌ Error loading local model: {e}")
-            print("💡 Tip: Ensure all 5 files (including pytorch_model.bin) are in 'my_pegasus' folder.")
 
     def preprocess(self, document: str) -> str:
         if not document or not document.strip():
             return ""
-        # پاکسازی فواصل اضافی برای درک بهتر مدل
         text = document.strip()
         text = re.sub(r'\s+', ' ', text)
         return text
@@ -56,39 +40,44 @@ class LLMAbstractiveSummarizer:
     def build_prompt(self, document: str) -> str:
         if not document:
             return ""
-        return self.prompt_template.format(document=document)
+        # طبق نظر استاد برای زیروشات بهتر، دستور صریح‌تر می‌دهیم
+        return f"Summarize and paraphrase the following: {document}"
 
     def generate_summary(self, prompt: str) -> str:
-        if not prompt:
-            return ""
-
+        if not prompt: return ""
         try:
-            # تغییرات استراتژیک برای بازنویسی خلاقانه
+            # محاسبه طول ورودی به کلمه
+            input_token_len = len(prompt.split())
+
+            # تعیین سقف خروجی: یا 60% طول ورودی، یا حداکثر 80 کلمه (هر کدام کمتر بود)
+            dynamic_max = min(80, int(input_token_len * 0.8))
+            # اطمینان از اینکه min_length خیلی بزرگ نباشد
+            dynamic_min = min(25, int(dynamic_max * 0.5))
+
             outputs = self.summarizer(
                 prompt,
-                max_length=60,
-                min_length=30,
-
-                # --- تغییرات اصلی اینجاست ---
-                do_sample=True,  # فعال کردن نمونه‌برداری برای خلاقیت بیشتر
-                top_k=50,  # انتخاب از بین ۵۰ کلمه برتر
-                top_p=0.95,  # استفاده از تکنیک Nucleus Sampling
-                temperature=1.2,  # کنترل میزان خلاقیت (عدد بالاتر = بازنویسی بیشتر)
-
-                no_repeat_ngram_size=2,  # جلوگیری از تکرار عبارات ۳ کلمه‌ای متن اصلی
-                repetition_penalty=10.0,  # جریمه سنگین برای کپی کردن کلمات
-                # --------------------------
-                length_penalty=1.5,
+                max_length=dynamic_max,
+                min_length=dynamic_min,
+                do_sample=True,
+                top_k=40,
+                top_p=0.90,
+                temperature=0.8,  # دمای متعادل برای کاهش توهم (Hallucination)
+                repetition_penalty=3.5,
+                no_repeat_ngram_size=2,
+                num_beams=1,
+                length_penalty=1.0,  # خنثی کردن برای حذف Warning
+                early_stopping=False,  # خنثی کردن برای حذف Warning
                 truncation=True
             )
 
             res = outputs[0]['summary_text'].strip()
-            # پاکسازی خروجی
-            return res.replace("<n>", " ").strip()
+            # تمیزکاری نهایی برای حذف کاراکترهای اضافه پگاسوس
+            res = res.replace("<n>", " ").replace(" .", ".").strip()
+            return res
 
         except Exception as e:
-            print(f"⚠️ LLM Generation Error: {e}")
-            return " ".join(prompt.split()[:25]) + "..."
+            print(f"⚠️ Generation Error: {e}")
+            return " ".join(prompt.split()[:dynamic_max]) if 'dynamic_max' in locals() else ""
 
     def summarize(self, document: str) -> str:
         processed_doc = self.preprocess(document)
