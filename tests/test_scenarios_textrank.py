@@ -69,3 +69,175 @@ def test_summarize_deep_trace():
     # Assertions
     assert len(raw_sents) == 5
     assert scores[3] < max(scores), "جمله نویز نباید بالاترین امتیاز را بگیرد"
+
+def test_textrank_deep_trace_similar_sentences():
+
+        summarizer = TextRankSummarizer(similarity_threshold=0.05, knn=3)
+
+        document = (
+            "AI improves healthcare outcomes. "  
+            "AI improves healthcare significantly. "
+            "AI improves healthcare in modern hospitals. "
+            "Football is played worldwide."
+        )
+
+        print("\n" + "=" * 60)
+        print("🧪 TEST 2 — Dense Similar Sentences")
+        print("=" * 60)
+
+        raw_sents = sentence_segmentation(document)
+        print("\n[Step 1] Segmentation:")
+        for i, s in enumerate(raw_sents):
+            print(f"{i}: {s}")
+
+        cleaned = summarizer.advanced_preprocess(raw_sents)
+        print("\n[Step 1.5] Preprocessing:")
+        for i, s in enumerate(cleaned):
+            print(f"{i}: {s}")
+
+        vectors = summarizer.sentence_representation(cleaned)
+        print("\n[Step 2] Vectors:")
+        for i, v in enumerate(vectors):
+            print(f"{i}: {list(v.keys())}")
+
+        graph = summarizer.build_similarity_graph(vectors)
+        print("\n[Step 3] Graph:")
+        for i, edges in graph.items():
+            print(f"{i} -> {edges}")
+
+        scores = summarizer.rank_sentences(graph)
+        print("\n[Step 4] Scores:")
+        for i, s in enumerate(scores):
+            print(f"{i}: {s:.4f}")
+
+        summary = summarizer.summarize(document, top_k=2)
+        print("\n[Final Summary]")
+        print(summary)
+
+def test_textrank_deep_trace_order_preservation_forced():
+    summarizer = TextRankSummarizer(similarity_threshold=0.01, knn=2)
+
+    document = (
+        "First sentence introduces topic. "
+        "Second sentence adds details. "
+        "Third sentence gives example. "
+        "Fourth sentence concludes."
+    )
+
+    print("\n" + "="*70)
+    print("🧪 TEST 3 — Order Preservation (FORCED DEEP TRACE)")
+    print("="*70)
+
+    # ------------------------------------------------------------------
+    # Step 1: Segmentation
+    # ------------------------------------------------------------------
+    raw_sents = sentence_segmentation(document)
+    print("\n[Step 1] Segmentation (Original Order):")
+    for i, s in enumerate(raw_sents):
+        print(f"{i}: {s}")
+
+    # ------------------------------------------------------------------
+    # Step 2: Preprocessing
+    # ------------------------------------------------------------------
+    cleaned = summarizer.advanced_preprocess(raw_sents)
+    print("\n[Step 2] Preprocessing:")
+    for i, s in enumerate(cleaned):
+        print(f"{i}: {s}")
+
+    # ------------------------------------------------------------------
+    # Step 3: Sentence Representation
+    # ------------------------------------------------------------------
+    vectors = summarizer.sentence_representation(cleaned)
+    print("\n[Step 3] Sentence Vectors:")
+    for i, v in enumerate(vectors):
+        print(f"{i}: {list(v.keys())}")
+
+    # ------------------------------------------------------------------
+    # Step 4: Similarity Graph
+    # ------------------------------------------------------------------
+    graph = summarizer.build_similarity_graph(vectors)
+    print("\n[Step 4] Similarity Graph:")
+    for i, edges in graph.items():
+        print(f"{i} -> {edges}")
+
+    # ------------------------------------------------------------------
+    # Step 5: PageRank
+    # ------------------------------------------------------------------
+    scores = summarizer.rank_sentences(graph)
+    print("\n[Step 5] PageRank Scores:")
+    for i, score in enumerate(scores):
+        print(f"{i}: {score:.6f}")
+
+    # ------------------------------------------------------------------
+    # Step 6: Top-k Selection (BEFORE order fix)
+    # ------------------------------------------------------------------
+    top_k = 3
+    ranked_indices = sorted(
+        range(len(scores)),
+        key=lambda i: scores[i],
+        reverse=True
+    )
+
+    top_indices = ranked_indices[:top_k]
+
+    print("\n[Step 6] Top-k by SCORE (Order-Breaking Stage):")
+    print("Ranked indices by score:", ranked_indices)
+    print("Selected top-k indices:", top_indices)
+
+    # ------------------------------------------------------------------
+    # Step 7: Order Preservation (CRITICAL STEP)
+    # ------------------------------------------------------------------
+    top_indices_sorted = sorted(top_indices)
+
+    print("\n[Step 7] Top-k AFTER order restoration:")
+    print("Sorted indices (original order):", top_indices_sorted)
+
+    # ------------------------------------------------------------------
+    # Step 8: Final Summary Construction
+    # ------------------------------------------------------------------
+    final_summary = " ".join(raw_sents[i] for i in top_indices_sorted)
+
+    print("\n[Step 8] Final Summary:")
+    print(final_summary)
+
+    # Sanity only
+    assert len(final_summary) > 0
+
+def test_textrank_deep_trace_sparse_graph():
+
+                summarizer = TextRankSummarizer(similarity_threshold=0.2, knn=1)
+
+                document = (
+                    "Cats are small animals. "
+                    "Quantum physics studies particles. "
+                    "Cooking requires ingredients. "
+                    "Space exploration is expensive."
+                )
+
+                print("\n" + "=" * 60)
+                print("🧪 TEST 4 — Sparse Similarity Graph")
+                print("=" * 60)
+
+                raw_sents = sentence_segmentation(document)
+                print("\n[Step 1] Sentences:")
+                for i, s in enumerate(raw_sents):
+                    print(f"{i}: {s}")
+
+                cleaned = summarizer.advanced_preprocess(raw_sents)
+                vectors = summarizer.sentence_representation(cleaned)
+                graph = summarizer.build_similarity_graph(vectors)
+
+                print("\n[Step 3] Graph:")
+                for i, edges in graph.items():
+                    print(f"{i} -> {edges}")
+
+                scores = summarizer.rank_sentences(graph)
+                print("\n[Step 4] Scores:")
+                for i, s in enumerate(scores):
+                    print(f"{i}: {s:.4f}")
+
+                summary = summarizer.summarize(document, top_k=2)
+                print("\n[Final Summary]")
+                print(summary)
+
+

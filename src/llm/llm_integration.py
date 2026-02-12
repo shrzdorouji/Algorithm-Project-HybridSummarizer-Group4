@@ -8,6 +8,8 @@ from typing import Optional
 import re
 import os
 
+from nltk.translate.lepor import length_penalty
+
 
 class LLMAbstractiveSummarizer:
     def __init__(
@@ -61,26 +63,31 @@ class LLMAbstractiveSummarizer:
             return ""
 
         try:
-            # تنظیمات بهینه پگاسوس برای تولید خلاصه کاملاً بازنویسی شده (Abstractive)
+            # تغییرات استراتژیک برای بازنویسی خلاقانه
             outputs = self.summarizer(
                 prompt,
                 max_length=60,
-                min_length=20,
-                num_beams=4,  # جستجوی عمیق کلمات برای جمله‌بندی انسانی
-                no_repeat_ngram_size=3,  # جلوگیری از تکرار عین عبارات متن اصلی
-                repetition_penalty=1.5,  # جریمه برای جلوگیری از کپی‌برداری کلمه به کلمه
-                length_penalty=0.8,  # تعادل بین کوتاهی و کامل بودن متن
-                early_stopping=True,
+                min_length=30,
+
+                # --- تغییرات اصلی اینجاست ---
+                do_sample=True,  # فعال کردن نمونه‌برداری برای خلاقیت بیشتر
+                top_k=50,  # انتخاب از بین ۵۰ کلمه برتر
+                top_p=0.95,  # استفاده از تکنیک Nucleus Sampling
+                temperature=1.2,  # کنترل میزان خلاقیت (عدد بالاتر = بازنویسی بیشتر)
+
+                no_repeat_ngram_size=2,  # جلوگیری از تکرار عبارات ۳ کلمه‌ای متن اصلی
+                repetition_penalty=10.0,  # جریمه سنگین برای کپی کردن کلمات
+                # --------------------------
+                length_penalty=1.5,
                 truncation=True
             )
 
             res = outputs[0]['summary_text'].strip()
-            # Pegasus گاهی تگ <n> برای خط جدید تولید می‌کند که آن را با فاصله جایگزین می‌کنیم
+            # پاکسازی خروجی
             return res.replace("<n>", " ").strip()
 
         except Exception as e:
             print(f"⚠️ LLM Generation Error: {e}")
-            # بازگشت به حالت امن: نمایش بخشی از متن اصلی در صورت بروز خطا
             return " ".join(prompt.split()[:25]) + "..."
 
     def summarize(self, document: str) -> str:
