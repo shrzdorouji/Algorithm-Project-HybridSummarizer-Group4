@@ -118,10 +118,11 @@ def test_textrank_deep_trace_order_preservation_forced():
     summarizer = TextRankSummarizer(similarity_threshold=0.01, knn=2)
 
     document = (
-        "First sentence introduces topic. "
-        "Second sentence adds details. "
-        "Third sentence gives example. "
-        "Fourth sentence concludes."
+        "Artificial Intelligence is rapidly transforming the healthcare industry by enabling faster and more accurate diagnoses. "
+        "Medical professionals are now using deep learning algorithms to detect diseases like cancer from radiological images with higher precision than ever before. "
+        "However, the integration of AI in clinics raises significant ethical questions regarding patient privacy and the black box nature of algorithmic decision-making. "
+        "To address these concerns, global health organizations are drafting new frameworks to ensure transparency and accountability in medical AI. "
+        "Despite these challenges, the potential to save millions of lives through early intervention makes AI an indispensable tool for future medicine. "
     )
 
     print("\n" + "="*70)

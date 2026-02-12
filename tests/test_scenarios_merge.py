@@ -10,14 +10,7 @@ import numpy as np
 
 # ۱. متن تست طولانی و استاندارد
 text = """
-Artificial Intelligence (AI) is rapidly transforming the global economy and everyday life. 
-From healthcare to finance, autonomous systems are being deployed to increase efficiency and accuracy. 
-In the medical field, AI algorithms can analyze X-rays and MRIs faster than human doctors, often identifying diseases at an earlier stage. 
-However, this technological shift also brings significant ethical concerns regarding privacy and job displacement. 
-Experts warn that without proper regulation, the gap between developed and developing nations might widen. 
-To address these challenges, international organizations are working on global standards for responsible AI development. 
-The goal is to ensure that while we embrace innovation, we do not compromise on human rights or security. 
-Ultimately, the success of AI will depend on how well we integrate human oversight with machine intelligence.
+Climate change remains the most significant threat to global stability, driving extreme weather events and rising sea levels. To combat this crisis, the transition to renewable energy sources like solar and wind power is no longer optional but a necessity for survival. International agreements, such as the Paris Accord, aim to limit global warming to below 2 degrees Celsius compared to pre-industrial levels. However, many developing nations struggle with the high initial costs of green technology, requiring financial support from wealthier countries to achieve their climate goals. Experts suggest that a combination of government policy and private innovation will be crucial in accelerating this global transition toward a carbon-neutral future.
 """
 
 print("🚀 Starting Hybrid Summarization Pipeline...\n")
