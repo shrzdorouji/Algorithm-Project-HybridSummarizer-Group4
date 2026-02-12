@@ -10,8 +10,7 @@ import numpy as np
 
 # ۱. متن تست طولانی و استاندارد
 text = """
-Climate change remains the most significant threat to global stability, driving extreme weather events and rising sea levels. To combat this crisis, the transition to renewable energy sources like solar and wind power is no longer optional but a necessity for survival. International agreements, such as the Paris Accord, aim to limit global warming to below 2 degrees Celsius compared to pre-industrial levels. However, many developing nations struggle with the high initial costs of green technology, requiring financial support from wealthier countries to achieve their climate goals. Experts suggest that a combination of government policy and private innovation will be crucial in accelerating this global transition toward a carbon-neutral future.
-"""
+Artificial Intelligence is the future of technology. Artificial Intelligence is the future of technology. The development of AI will change the world forever. The development of AI will change the world forever. AI is transforming everything we know."""
 
 print("🚀 Starting Hybrid Summarization Pipeline...\n")
 

@@ -50,9 +50,8 @@ class LLMAbstractiveSummarizer:
             input_token_len = len(prompt.split())
 
             # تعیین سقف خروجی: یا 60% طول ورودی، یا حداکثر 80 کلمه (هر کدام کمتر بود)
-            dynamic_max = min(80, int(input_token_len * 0.8))
-            # اطمینان از اینکه min_length خیلی بزرگ نباشد
-            dynamic_min = min(25, int(dynamic_max * 0.5))
+            dynamic_max = min(150, int(input_token_len * 0.6))
+            dynamic_min = min(5, int(input_token_len * 0.5)) # برای متن‌های کوتاه، حداقل را روی ۵ بگذار
 
             outputs = self.summarizer(
                 prompt,

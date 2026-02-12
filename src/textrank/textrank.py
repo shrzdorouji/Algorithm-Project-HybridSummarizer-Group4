@@ -281,72 +281,58 @@ class TextRankSummarizer:
 
     def summarize(self, document: str, top_k: int) -> str:
         """
-        Generate an extractive summary using the Optimized TextRank algorithm.
-        Returns a single string summary, ensuring 1-to-1 alignment between
-        raw and processed sentences.
+        تولید خلاصه با رعایت دو شرط:
+        1. حذف جملات تکراری (حتی اگر خروجی کمتر از top_k شود).
+        2. حفظ ترتیب اصلی جملات.
         """
+        from difflib import SequenceMatcher
 
-        # --------------------------------------------------
-        # Step 1: Sentence Segmentation (RAW sentences)
-        # --------------------------------------------------
-        # این جملات برای خروجی نهایی هستند (دست‌نخورده با علائم نگارشی)
+        # ۱. قطعه‌بندی جملات
         raw_sentences = sentence_segmentation(document)
-
         if not raw_sentences:
             return ""
 
-        # اگر تعداد جملات کمتر از k بود، کل متن را برگردان
-        if len(raw_sentences) <= top_k:
-            return " ".join(raw_sentences)
-
-        # --------------------------------------------------
-        # Step 1.5: Advanced Preprocessing
-        # --------------------------------------------------
-        # ارسال لیست جملات خام به تابع پیش‌پردازش برای حفظ دقیق "تعداد" (Alignment)
+        # ۲. پیش‌پردازش پیشرفته
         cleaned_sentences = self.advanced_preprocess(raw_sentences)
 
-        # مکانیزم ایمنی برای اطمینان از عدم تغییر تعداد جملات در پردازش
-        if len(cleaned_sentences) != len(raw_sentences):
-            raise ValueError(
-                f"Mismatch: Raw({len(raw_sentences)}) != Cleaned({len(cleaned_sentences)}). "
-                "The preprocessing logic must not drop or merge sentences."
-            )
-
-        # --------------------------------------------------
-        # Step 2: Sentence Representation (TF-IDF Vectors)
-        # --------------------------------------------------
+        # ۳. بازنمایی جملات (TF-IDF)
         vectors = self.sentence_representation(cleaned_sentences)
 
-        # --------------------------------------------------
-        # Step 3: Sparse Similarity Graph (KNN + Cosine)
-        # --------------------------------------------------
+        # ۴. ساخت گراف شباهت
         graph = self.build_similarity_graph(vectors)
 
-        # --------------------------------------------------
-        # Step 4 & 5: Iterative Ranking (PageRank)
-        # --------------------------------------------------
+        # ۵. رتبه‌بندی (PageRank)
         scores = self.rank_sentences(graph)
 
-        # --------------------------------------------------
-        # Step 6: Sentence Selection and Sorting
-        # --------------------------------------------------
-        # ۱. اتصال اندیس به امتیاز
-        indexed_scores = list(enumerate(scores))
+        # ۶. انتخاب جملات با فیلتر حذف تکرار (Redundancy Filter)
+        indexed_scores = sorted(list(enumerate(scores)), key=lambda x: x[1], reverse=True)
 
-        # ۲. سورت نزولی بر اساس امتیاز برای پیدا کردن جملات مهم‌تر
-        indexed_scores.sort(key=lambda x: x[1], reverse=True)
+        top_indices = []
+        selected_content = []
 
-        # ۳. انتخاب k اندیس برتر
-        top_indices = [idx for idx, _ in indexed_scores[:top_k]]
+        for idx, score in indexed_scores:
+            # متن جمله برای مقایسه (حذف فضاها و کوچک کردن حروف)
+            current_sent = raw_sentences[idx].strip().lower()
 
-        # ۴. سورت مجدد اندیس‌ها به صورت صعودی برای حفظ ترتیب وقوع در متن اصلی
+            # چک کردن شباهت با جملات قبلاً انتخاب شده
+            is_duplicate = False
+            for prev_sent in selected_content:
+                # اگر شباهت بالای 80% بود (قابل تنظیم)
+                if SequenceMatcher(None, current_sent, prev_sent).ratio() > 0.8:
+                    is_duplicate = True
+                    break
+
+            if not is_duplicate:
+                top_indices.append(idx)
+                selected_content.append(current_sent)
+
+            # توقف در صورت رسیدن به سقف درخواستی
+            if len(top_indices) == top_k:
+                break
+
+        # ۷. سورت مجدد اندیس‌ها برای حفظ جریان منطقی متن
         top_indices.sort()
-
-        # ۵. استخراج جملات خام بر اساس اندیس‌های نهایی
         selected_sentences = [raw_sentences[i] for i in top_indices]
 
-        # --------------------------------------------------
-        # Step 7: Output (Join as a single string)
-        # --------------------------------------------------
+        # ۸. خروجی نهایی به صورت رشته متنی
         return " ".join(selected_sentences)
-

@@ -73,9 +73,24 @@ if st.button("✨ Generate Hybrid Summary"):
                 tr_scores_list = tr_model.rank_sentences(tr_graph)
 
                 # استفاده از مقدار top_k از اینپوت سایدبار
-                ranked_indices = np.argsort(tr_scores_list)[::-1]
-                top_indices = ranked_indices[:top_k].tolist()
-                s_textrank = [raw_sents[i] for i in sorted(top_indices)]
+                ranked_indices = sorted(range(len(tr_scores_list)),
+                                        key=lambda i: (tr_scores_list[i], -i),
+                                        reverse=True)
+
+                seen = set()
+                unique_indices = []
+
+                for idx in ranked_indices:
+                    sent = raw_sents[idx].strip()
+                    if sent not in seen:
+                        seen.add(sent)
+                        unique_indices.append(idx)
+                    if len(unique_indices) == top_k:
+                        break
+
+                # حفظ ترتیب متن اصلی
+                unique_indices = sorted(unique_indices)
+                s_textrank = [raw_sents[i] for i in unique_indices]
 
                 tr_scores_dict = {raw_sents[i]: tr_scores_list[i] for i in range(len(raw_sents))}
 

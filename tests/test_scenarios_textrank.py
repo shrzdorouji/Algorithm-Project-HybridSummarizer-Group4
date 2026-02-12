@@ -17,11 +17,11 @@ def test_summarize_deep_trace():
     summarizer = TextRankSummarizer(similarity_threshold=0.01, knn=2)
 
     document = (
-        "Artificial Intelligence is a transformative technology. "
-        "AI models can solve complex problems efficiently. "
-        "Machine learning is a subset of artificial intelligence. "
-        "The sun rises in the east every morning. "
-        "Future AI systems will change how we work."
+        "The phenomenon of global climate change, driven primarily by anthropogenic greenhouse gas emissions, represents one of the most formidable challenges to contemporary civilization and the delicate equilibrium of Earth's ecosystems. Over the past century, industrial activities—including the combustion of fossil fuels like coal, oil, and natural gas—have significantly elevated atmospheric concentrations of carbon dioxide and methane. These gases trap thermal energy within the troposphere, leading to a consistent rise in global mean temperatures, a process commonly referred to as global warming. "
+        "The ramifications of this temperature increase are multi-faceted and catastrophic. Arctic sea ice is retreating at unprecedented rates, contributing to eustatic sea-level rise that threatens low-lying coastal regions and island nations such as the Maldives and Kiribati. Furthermore, the intensification of the hydrological cycle has resulted in more frequent and severe meteorological events, including category-five hurricanes, prolonged droughts in sub-Saharan Africa, and devastating wildfires in temperate forest biomes. "
+        "Concurrently, we are witnessing a global biodiversity crisis often characterized as the sixth mass extinction. The loss of habitat due to agricultural expansion, combined with the shifting climatic envelopes that species must navigate, has pushed thousands of organisms to the brink of extinction. Coral reefs, which serve as vital nurseries for marine life, are undergoing massive bleaching events as oceanic acidity increases due to carbon sequestration by the seas. "
+        "Mitigation strategies, such as the transition to renewable energy sources like solar, wind, and geothermal power, are essential but require global political cooperation and massive capital investment. The Paris Agreement aimed to limit the temperature increase to well below 2 degrees Celsius, yet current emission trajectories suggest that more radical systemic changes are necessary to avoid the most dire ecological tipping points. Ultimately, the survival of diverse life forms on this planet depends on our collective ability to restructure our relationship with the environment and move toward a sustainable, circular economy that prioritizes ecological health over indefinite industrial growth. "
+
     )
 
     print("\n" + "=" * 50)
