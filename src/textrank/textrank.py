@@ -183,6 +183,7 @@ class TextRankSummarizer:
             vectors.append(vector)
 
         return vectors
+
     # ------------------------------------------------------------------
     # Step 3: Sparse Similarity Graph Construction
     # ------------------------------------------------------------------
@@ -273,9 +274,11 @@ class TextRankSummarizer:
             TR = TR_new
 
         return TR.tolist()
+
     # ------------------------------------------------------------------
     # Step 6 & 7: Sentence Selection and Output
     # ------------------------------------------------------------------
+
     def summarize(self, document: str, top_k: int) -> str:
         """
         Generate an extractive summary using the Optimized TextRank algorithm.
@@ -346,3 +349,4 @@ class TextRankSummarizer:
         # Step 7: Output (Join as a single string)
         # --------------------------------------------------
         return " ".join(selected_sentences)
+
