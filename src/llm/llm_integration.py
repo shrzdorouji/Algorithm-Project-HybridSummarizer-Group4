@@ -1,134 +1,84 @@
-"""
-LLM-Based Abstractive Summarization Module
-------------------------------------------
-This module defines the role of a Large Language Model (LLM)
-as an independent abstractive summarizer.
-
-The design strictly follows:
-- llm_rule.md
-
-IMPORTANT:
-- The LLM operates independently from TextRank.
-- It receives only raw textual content.
-- No sentence scores, rankings, or graph information are provided.
-- This is a Phase-1 skeleton (design-level, non-executable).
-"""
-
 from typing import Optional
-
+import re
+import os
 
 class LLMAbstractiveSummarizer:
-    """
-    Independent LLM-based abstractive summarizer.
-    """
-
     def __init__(
-        self,
-        max_length: int = 150,
-        prompt_template: Optional[str] = None,
+            self,
+            model_path: str = "./my_pegasus",
+            max_length: int = 150,
+            prompt_template: Optional[str] = None,
     ):
-        """
-        Initialize LLM summarization parameters.
-
-        Parameters
-        ----------
-        max_length : int
-            Maximum length of the generated summary.
-        prompt_template : Optional[str]
-            Fixed prompt used to guide abstractive summarization.
-        """
         self.max_length = max_length
-        self.prompt_template = prompt_template or (
-            "Summarize the following document in a concise and coherent manner:"
-        )
+        self.prompt_template = prompt_template or "{document}"
 
-    # ------------------------------------------------------------------
-    # Step 1: Preprocessing
-    # ------------------------------------------------------------------
+        try:
+            from transformers import pipeline, PegasusTokenizer, PegasusForConditionalGeneration
+
+            print(f"🔄 Loading Pegasus from local directory: {model_path}")
+            tokenizer = PegasusTokenizer.from_pretrained(model_path)
+            model = PegasusForConditionalGeneration.from_pretrained(model_path)
+
+            self.summarizer = pipeline(
+                "summarization",
+                model=model,
+                tokenizer=tokenizer,
+                device=-1  # CPU
+            )
+            print("✅ Pegasus Engine is ready with advanced sampling!")
+
+        except Exception as e:
+            print(f"❌ Error loading local model: {e}")
+
     def preprocess(self, document: str) -> str:
-        """
-        Preprocess the input document.
-        This may include cleaning, normalization, or tokenization.
+        if not document or not document.strip():
+            return ""
+        text = document.strip()
+        text = re.sub(r'\s+', ' ', text)
+        return text
 
-        Parameters
-        ----------
-        document : str
-            Original document D.
-
-        Returns
-        -------
-        str
-            Preprocessed textual content.
-        """
-        pass
-
-    # ------------------------------------------------------------------
-    # Step 2: Prompt Construction
-    # ------------------------------------------------------------------
     def build_prompt(self, document: str) -> str:
-        """
-        Construct the final LLM input by combining
-        the fixed prompt and the document text.
+        if not document:
+            return ""
+        # طبق نظر استاد برای زیروشات بهتر، دستور صریح‌تر می‌دهیم
+        return f"Summarize and paraphrase the following: {document}"
 
-        Parameters
-        ----------
-        document : str
-            Preprocessed document.
-
-        Returns
-        -------
-        str
-            Final input prompt for the LLM.
-        """
-        pass
-
-    # ------------------------------------------------------------------
-    # Step 3: LLM Generation
-    # ------------------------------------------------------------------
     def generate_summary(self, prompt: str) -> str:
-        """
-        Generate an abstractive summary using an external LLM.
+        if not prompt: return ""
+        try:
+            # محاسبه طول ورودی به کلمه
+            input_token_len = len(prompt.split())
 
-        NOTE:
-        - The LLM is treated as a black-box oracle.
-        - No internal states, scores, or explanations are exposed.
+            # تعیین سقف خروجی: یا 60% طول ورودی، یا حداکثر 80 کلمه (هر کدام کمتر بود)
+            dynamic_max = min(150, int(input_token_len * 0.6))
+            dynamic_min = min(5, int(input_token_len * 0.5)) # برای متن‌های کوتاه، حداقل را روی ۵ بگذار
 
-        Parameters
-        ----------
-        prompt : str
-            Input prompt for the LLM.
+            outputs = self.summarizer(
+                prompt,
+                max_length=dynamic_max,
+                min_length=dynamic_min,
+                do_sample=True,
+                top_k=40,
+                top_p=0.90,
+                temperature=0.8,  # دمای متعادل برای کاهش توهم (Hallucination)
+                repetition_penalty=3.5,
+                no_repeat_ngram_size=2,
+                num_beams=1,
+                length_penalty=1.0,  # خنثی کردن برای حذف Warning
+                early_stopping=False,  # خنثی کردن برای حذف Warning
+                truncation=True
+            )
 
-        Returns
-        -------
-        str
-            Abstractive summary S_llm.
-        """
-        pass
+            res = outputs[0]['summary_text'].strip()
+            # تمیزکاری نهایی برای حذف کاراکترهای اضافه پگاسوس
+            res = res.replace("<n>", " ").replace(" .", ".").strip()
+            return res
 
-    # ------------------------------------------------------------------
-    # Main Interface
-    # ------------------------------------------------------------------
+        except Exception as e:
+            print(f"⚠️ Generation Error: {e}")
+            return " ".join(prompt.split()[:dynamic_max]) if 'dynamic_max' in locals() else ""
+
     def summarize(self, document: str) -> str:
-        """
-        Generate a standalone abstractive summary from the original document.
-
-        Algorithm:
-        1. Preprocess document D
-        2. Construct prompt I = P + D
-        3. Generate summary S_llm = LLM.generate(I)
-        4. Return S_llm
-
-        Parameters
-        ----------
-        document : str
-            Original input document.
-
-        Returns
-        -------
-        str
-            Abstractive LLM-generated summary.
-        """
         processed_doc = self.preprocess(document)
-        prompt = self.build_prompt(processed_doc)
-        summary = self.generate_summary(prompt)
-        return summary
+        input_text = self.build_prompt(processed_doc)
+        return self.generate_summary(input_text)

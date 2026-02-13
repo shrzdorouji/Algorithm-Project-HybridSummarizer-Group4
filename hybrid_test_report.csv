@@ -1,0 +1,11 @@
+Test_File,Input_Sents,Final_Sents,TextRank_Count,Theory_Analysis,Status
+sample_01.txt,4,4,3,Simple Case: High coherence expected between Extractive and Abstractive parts.,SUCCESS ✅
+sample_02.txt,4,4,3,Medium Case: Tests how well the system handles technical terms like 'Qubits'.,SUCCESS ✅
+sample_03.txt,5,4,3,Hard Case: Long specialized sentences; tests information density.,SUCCESS ✅
+sample_04.txt,2,2,2,Edge Case: Very short text; tests if the system maintains stability with minimal input.,SUCCESS ✅
+sample_05.txt,2,3,2,Edge Case: Input < K; tests the merger's ability to not over-extract.,SUCCESS ✅
+sample_06.txt,4,3,3,Edge Case: High punctuation; tests the robustness of the Sentence Segmenter.,SUCCESS ✅
+sample_07.txt,3,4,3,Hard Case: Logical contrast; tests if Pegasus captures the 'However' nuance.,SUCCESS ✅
+sample_08.txt,5,3,3,Worst-Case: Heavy Redundancy; tests the Redundancy Filter (SequenceMatcher).,SUCCESS ✅
+sample_09.txt,4,4,3,Worst-Case: Unrelated sentences; tests the Graph connectivity logic.,SUCCESS ✅
+sample_10.txt,12,4,3,Worst-Case: Token Stress; tests the 512-token limit of the Pegasus model.,SUCCESS ✅

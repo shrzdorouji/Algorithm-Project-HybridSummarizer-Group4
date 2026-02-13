@@ -13,6 +13,9 @@ torch>=2.0.0
 transformers>=4.35.2
 sentence-transformers>=2.2.0
 
-# Utilities
+# Utilities & UI
 tqdm>=4.65.0
 pandas>=2.0.0
+streamlit
+pytest
+flake8
