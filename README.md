@@ -1,128 +1,137 @@
-# 🧠 Hybrid Text Summarization System
-
-> A hybrid framework integrating graph-based extractive ranking with transformer-based abstractive modeling.
-
-**Course:** Algorithm Design  
-**Academic Year:** 1404–1405  
+# 🚀 Hybrid Text Summarization System
+### TextRank + Pegasus (LLM)
+**Algorithm Design Course Project – Phase 1 & Phase 2**
 
 ---
 
-## 📖 Overview
+## 📌 Overview
 
-Automatic text summarization aims to condense a document while preserving semantic meaning and logical coherence.
+This project implements a **Hybrid Text Summarization System** that integrates:
 
-This project implements a hybrid summarization framework composed of:
+- **Extractive Summarization (TextRank)** – Graph-based ranking
+- **Abstractive Summarization (Pegasus LLM)** – Transformer-based generation
 
-- TextRank — graph-based extractive summarization  
-- Transformer-based LLM — abstractive language modeling  
-- Hybrid fusion strategy — weighted integration of both approaches  
+The system combines deterministic ranking with neural generation to produce summaries that are:
 
-The objective is to combine algorithmic efficiency with semantic intelligence.
-
----
-
-## 🎯 Problem Definition
-
-Given a document:
-
-```
-D = { s1, s2, ..., sn }
-```
-
-Generate a summary S such that:
-
-- Relevant information is maximized  
-- Redundancy is minimized  
-- Logical coherence is preserved  
-- Computational complexity remains bounded  
-
-The system is analyzed both theoretically (asymptotic complexity) and empirically (runtime behavior).
+- Factually grounded  
+- Linguistically coherent  
+- Structurally optimized  
+- Redundancy-aware  
 
 ---
 
-## 🏗 System Architecture
+## ✨ Key Features
 
-```
-Raw Document
-     │
-     ├── TextRank (Extractive)
-     │
-     ├── LLM Module (Abstractive)
-     │
-     └── Hybrid Fusion
-            │
-       Final Summary
+- Dual-Engine Architecture (Graph Theory + Deep Learning)
+- Optimized TextRank with Sparse TF-IDF + Min-Heap (O(N log K))
+- Local Pegasus Integration (Offline capable)
+- Weighted Hybrid Merge Strategy
+- Redundancy Filtering Mechanism
+- CI/CD Pipeline (GitHub Actions + pytest + flake8)
+- Interactive Web UI (Streamlit)
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    A[Input Text] --> B[Extractive Layer<br/>TextRank]
+    A --> C[Abstractive Layer<br/>Pegasus LLM]
+    B --> D[Hybrid Merge Layer]
+    C --> D
+    D --> E[Final Summary]
 ```
 
 ---
 
-## ⚙ Algorithmic Components
+## ⚙️ TextRank Module (Extractive Layer)
 
-### 1. TextRank (Extractive)
+### Preprocessing
+- Sentence segmentation
+- Tokenization (NLTK)
+- Stopword removal
+- Porter Stemming
 
-Pipeline:
+### Vectorization
+- Sparse TF-IDF matrix
+- Memory-efficient representation
 
-1. Sentence segmentation  
-2. Advanced preprocessing  
-3. TF-IDF vectorization  
-4. Sparse similarity graph construction  
-5. PageRank ranking  
-6. Redundancy filtering  
+### Graph Construction
+- Cosine similarity matrix
+- Configurable similarity threshold (θ)
+- Damping factor (d = 0.85)
+- Convergence tolerance (1e-4)
 
-Complexity:
-
-| Metric | Complexity |
-|--------|------------|
-| Time   | O(n²L)     |
-| Space  | O(nL)      |
-
-Where:
-
-- n = number of sentences  
-- L = average sentence length  
-
-Optimizations include sparse graph representation, KNN pruning, and early convergence stopping.
+### Optimization Strategy
+- Sparse similarity graph
+- Min-Heap for Top-K selection → O(N log K)
+- Reduced memory footprint
 
 ---
 
-### 2. Transformer-Based LLM (Abstractive)
+## 🧠 LLM Module (Abstractive Layer)
 
-Encoder-decoder architecture with self-attention.
-
-Complexity:
-
-| Metric | Complexity |
-|--------|------------|
-| Time   | O(n²)      |
-| Space  | O(n²)      |
-
-The quadratic behavior originates from the attention mechanism.
+- Model: `PegasusForConditionalGeneration`
+- Dynamic summary length adjustment
+- Controlled decoding:
+  - `top_p`
+  - `top_k`
+  - `temperature`
+- Hallucination mitigation via constrained sampling
+- Fully offline compatible (local fine-tuned model)
 
 ---
 
-### 3. Hybrid Fusion Strategy
+## 🔗 Hybrid Merge Strategy (Phase 2 Core Innovation)
 
 Final scoring formula:
 
-```
-Score = α * TextRank + β * LLM
-```
+\[
+Score_{final} = (\alpha \times Score_{TR}) + (\beta \times Score_{LLM})
+\]
 
-This stage performs:
+### Includes:
 
-- Weighted score integration  
-- Similarity-based redundancy filtering  
-- Logical sentence reordering  
+- Weighted ranking fusion
+- Semantic redundancy filtering (SequenceMatcher threshold = 0.6)
+- Candidate re-scoring
+- Logical reordering by original sentence index
+- Balanced precision–fluency tradeoff
 
 ---
 
-## 📊 Complexity Summary
+## ⏱️ Complexity Analysis
 
-| Component | Time Complexity | Space Complexity |
-|-----------|----------------|-----------------|
-| TextRank  | O(n²L)        | O(nL)           |
-| LLM       | O(n²)         | O(n²)           |
-| Hybrid    | O(n²)         | O(n)            |
+| Component | Complexity |
+|------------|------------|
+| Sentence Vectorization | O(N × V) |
+| Graph Construction | O(N² · V_avg + N log K) |
+| PageRank Convergence | O(I × E) |
+| Merge Logic | O(M²), where M ≪ N |
+
+---
+
+## 🧪 Testing & CI/CD
+
+### Unit Testing
+- Framework: `pytest`
+- Graph correctness validation
+- Weight formula verification
+- Redundancy filter tests
+- LLM mocked during tests for lightweight execution
+
+### Code Quality
+- `flake8` (PEP8 compliance)
+- Modular architecture validation
+
+### GitHub Actions
+Every push to `main` triggers:
+
+- Virtual environment build
+- Dependency installation
+- Unit test execution
+- Style validation
 
 ---
 
@@ -131,79 +140,122 @@ This stage performs:
 ```
 Algorithm-Project-HybridSummarizer-Group4/
 │
-├── data/
-│   ├── raw/
-│   │   ├── sample_texts.md
-│   │   └── .gitkeep
-│   │
-│   └── processed/
-│       └── .gitkeep
-│
-├── docs/
-│   ├── diagrams/
-│   └── phase-1-report.md
+├── .github/workflows/
+│   └── ci-pipeline.yml
 │
 ├── src/
 │   ├── textrank/
 │   │   ├── textrank.py
-│   │   ├── textrank_pseudocode.md
-│   │   └── complexity_analysis.md
+│   │   └── utils.py
 │   │
 │   ├── llm/
-│   │   ├── llm_integration.py
-│   │   ├── llm_role.md
-│   │   └── __init__.py
+│   │   └── llm_integration.py
 │   │
 │   └── merge/
-│       ├── merge_strategy.py
-│       ├── merge_algorithm.md
-│       ├── merge_algorithm_examples.md
-│       ├── merge_analysis.md
-│       └── __init__.py
+│       └── merge_strategy.py
 │
 ├── tests/
+│   └── test_pipeline.py
+│
+├── app.py
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 🚀 Installation
+## 🛠️ Installation
+
+### 1️⃣ Clone Repository
 
 ```bash
-git clone <repository-url>
-cd Algorithm-Project-HybridSummarizer-Group4
+git clone https://github.com/YourUsername/Project-Name.git
+cd Project-Name
+```
+
+### 2️⃣ Create Virtual Environment (Recommended)
+
+```bash
+python -m venv venv
+source venv/bin/activate      # Linux / Mac
+venv\Scripts\activate         # Windows
+```
+
+### 3️⃣ Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## 🧪 Example Usage
+## ▶️ Run Web Interface
 
-```python
-from src.textrank.textrank import TextRankSummarizer
+```bash
+streamlit run app.py
+```
 
-document = "Your input text here..."
-summarizer = TextRankSummarizer()
-summary = summarizer.summarize(document, top_k=3)
-print(summary)
+Then open:
+
+```
+http://localhost:8501
 ```
 
 ---
 
-## 🔮 Future Work
+## 📊 Example Workflow
 
-- Sparse attention mechanisms  
-- Sentence-BERT similarity  
-- GPU acceleration  
-- ROUGE-based evaluation  
-- Parallel similarity computation  
+1. Paste input text  
+2. Select summary length  
+3. System generates:
+   - Extractive summary
+   - Abstractive summary
+   - Hybrid optimized summary  
+
+---
+
+## 🧠 Edge Cases Evaluated
+
+- Technical documentation
+- Highly redundant paragraphs
+- Short input snippets
+- Repeated sentence clusters
+- Academic structured texts
+
+---
+
+## 📈 Future Improvements
+
+- SBERT similarity integration
+- ROUGE & BLEU evaluation metrics
+- Multi-document summarization
+- Reinforcement tuning of α / β
+- Attention-based redundancy detection
+- Performance benchmarking dashboard
+
+---
+
+## 🎓 Academic Context
+
+Course: **Algorithm Design**  
+
+Phase 1:
+- Optimized TextRank implementation
+
+Phase 2:
+- Hybrid fusion logic
+- Weight tuning
+- Redundancy filtering
+- Performance optimization
 
 ---
 
 ## 👥 Authors
 
 Group 4  
-Algorithm Design Course  
-Academic Year 1404–1405  
+
+---
+
+## 📄 License
+
+For academic and educational use only.
