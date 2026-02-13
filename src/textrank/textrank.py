@@ -20,6 +20,18 @@ from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+
+def _ensure_nltk_resources():
+    resources = ["punkt", "punkt_tab", "stopwords"]
+    for res in resources:
+        try:
+            nltk.data.find(f"tokenizers/{res}" if "punkt" in res else f"corpora/{res}")
+        except LookupError:
+            nltk.download(res)
+
+_ensure_nltk_resources()
+
 
 
 def sentence_segmentation(document: str) -> List[str]:
