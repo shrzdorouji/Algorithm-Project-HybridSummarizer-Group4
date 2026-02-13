@@ -1,0 +1,46 @@
+name: Summarizer CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest flake8 numpy scikit-learn nltk transformers torch
+        # نصب سایر وابستگی‌ها اگر فایل requirements دارید:
+        # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: 1. Style Check (Linting with flake8)
+      run: |
+        # بررسی خطاهای سینتکسی و استایل کد
+        # E9, F63, F7, F82 خطاهای بحرانی هستند
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # هشدار برای کدهای کثیف (اختیاری)
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: 2. Automated Testing (Pytest)
+      run: |
+        # اجرای تست‌های واحدی که پاس کردیم
+        python -m pytest tests/test_pipeline.py
+
+    - name: 3. Simple Static Analysis
+      run: |
+        # بررسی اینکه آیا ماژول‌های اصلی بدون خطا لود می‌شوند
+        python -c "from src.merge.merge_strategy import HybridMergeSummarizer; print('✅ Logic Layer: OK')"
+        python -c "from src.textrank.textrank import TextRankSummarizer; print('✅ Extractive Layer: OK')"
