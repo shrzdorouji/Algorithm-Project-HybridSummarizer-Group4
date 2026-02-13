@@ -20,31 +20,36 @@ from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 import nltk
 
 def _ensure_nltk_resources():
-    resources = ["punkt", "punkt_tab", "stopwords"]
-    for res in resources:
+    """
+    Ensure required NLTK resources are available (CI-safe).
+    """
+    resources = {
+        "punkt": "tokenizers/punkt",
+        "punkt_tab": "tokenizers/punkt_tab/english",
+        "stopwords": "corpora/stopwords",
+    }
+
+    for res, path in resources.items():
         try:
-            nltk.data.find(f"tokenizers/{res}" if "punkt" in res else f"corpora/{res}")
+            nltk.data.find(path)
         except LookupError:
             nltk.download(res)
 
+# ✅ Run once at import time
 _ensure_nltk_resources()
+
 
 
 
 def sentence_segmentation(document: str) -> List[str]:
     """
-    Split the document into raw sentences using NLTK's recommended tokenizer.
+    Split the document into raw sentences using NLTK's tokenizer.
     """
-    try:
-        # استفاده از sent_tokenize که هوشمندتر از regex ساده عمل می‌کند
-        return sent_tokenize(document)
-    except LookupError:
-        # در صورتی که دیتای punkt دانلود نشده باشد
-        nltk.download('punkt')
-        return sent_tokenize(document)
+    return sent_tokenize(document)
 
 
 class TextRankSummarizer:
